@@ -1,66 +1,52 @@
-import mysql.connector
 import matplotlib.pyplot as plt
-import datetime
-import numpy as np
-import time as t
-db = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password ="root",
-    database ="f1database"
-)
-mycursor = db.cursor()
+import sqlite3
+from time import strftime, gmtime
+
+
+connection = sqlite3.connect('f1Database.db')
+cursor = connection.cursor()
 
 def lapdata(lap):
 
     wheel = f"SELECT Wheel from lap{lap}"
-    mycursor.execute(wheel)
-    wheelresults = mycursor.fetchall()
+    cursor.execute(wheel)
+    wheelresults = cursor.fetchall()
 
     throttle = f"SELECT Throttle from lap{lap}"
-    mycursor.execute(throttle)
-    throttleresult = mycursor.fetchall()
+    cursor.execute(throttle)
+    throttleresult = cursor.fetchall()
 
     brake = f"SELECT Brake from lap{lap}"
-    mycursor.execute(brake)
-    brakeresult = mycursor.fetchall()
+    cursor.execute(brake)
+    brakeresult = cursor.fetchall()
 
-    time = f"SELECT COUNT(*) from lap{lap};"
-    mycursor.execute(time)
-    timeresult = mycursor.fetchall()
-    timeresult = timeresult[0][0]/78
+    lapTimeQuery = f"SELECT lapTime from lap{lap} ORDER BY lapTime DESC LIMIT 1"
+    cursor.execute(lapTimeQuery)
+    lapTime = (cursor.fetchall()[0][0])
 
+    timeArray = []
+    for i in range(int(lapTime) + 2):
+        timeArray.append(strftime("%M:%S", gmtime(i)))
 
-    timeresultformat = "{:.3f}".format(timeresult)
+    totalSpacing = []
+    timeRange = 0
+    for i in range(int(lapTime) + 2):
+        totalSpacing.append(timeRange)
+        timeRange+= len(wheelresults)/lapTime
 
-    timeplot = []
-    for i in range(0, int(timeresult) + 2):
-        timeplot.append(i)
+    lapTime = strftime("%M:%S%MS", gmtime(lapTime))[:-2]
 
-    totalentries = []
-    timerange = 0
-    for i in range(0, int(len(wheelresults) /78) + 2):
-        totalentries.append(timerange)
-        timerange += 78
-
-
-    seconds = t.gmtime(timeresult)
-    timeresultformat = t.strftime("%M:%S:%M",seconds)
-    timeresultformat = timeresultformat[1:]
-
-
-    plt.figure(figsize=((len(timeplot) + 2) / 4.5 ,4))
-    plt.gca().margins(x=0)
-
+    plt.figure(figsize=(len(totalSpacing)/4, 4))
+  
     plt.plot(wheelresults, color = "yellow", label = "Wheel")
     plt.plot(throttleresult, color = "green", label = "Throttle")
     plt.plot(brakeresult, color = "red", label = "Brake")
 
-    plt.xticks(totalentries, timeplot)
+    plt.xticks(fontsize=10, rotation=90)
+    plt.xticks(totalSpacing, timeArray)
 
     plt.title(f"Lap {lap}")
-    plt.xlabel(f"Time {timeresultformat}")
+    plt.xlabel(f"Time: {lapTime[1:]}")
     plt.tight_layout()
-lapdata(1)
-lapdata(2)
+lapdata(0)
 plt.show()
