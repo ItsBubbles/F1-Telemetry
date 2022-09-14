@@ -3,8 +3,6 @@ from ArrayStructureF1 import *
 from struct import * 
 import pygame
 import sqlite3
-import time
-import numpy as np
 from telemetry import *
 
 UDP_IP = "127.0.0.1" # UDP listen IP-address
@@ -25,11 +23,11 @@ currentLap=0
 print ("F1 Telemetry ready")
 
 def getValByName(name):
-    global returnData # Access the global variable returnData
-    for x in range(0, len(returnData)): # Do for every item in returnData
-        if returnData[x][0] == name: # If this item matches the name
-            return returnData[x][1] # Return the value of this item
-    return -1 # Nothing found, return -1
+    global returnData
+    for x in range(0, len(returnData)):
+        if returnData[x][0] == name: 
+            return returnData[x][1]
+    return -1 
 
 cursor.execute(f"""CREATE TABLE IF NOT EXISTS lap{lastLap}(wheel FLOAT, throttle FLOAT, brake FLOAT, lapTime FLOAT)""")
 
@@ -42,14 +40,14 @@ while True:
     while running:
         pygame.event.pump()
         index = 0; # Set starting index
-        data, addr = udp.recvfrom(PACKET_SIZE) # Receive value from UDP socket
-        for x in range(0, len(returnData)): # Do for every item in the received array
-            size = 4 if returnData[x][2] == 'f' else 1 # Set size based on if it's a byte or float
-            returnData[x][1] = unpack('<' + returnData[x][2], data[index:index+size])[0] # Add float to the array
-            index += size # Increase starting index with the size
+        data, addr = udp.recvfrom(PACKET_SIZE) 
+        for x in range(0, len(returnData)): 
+            size = 4 if returnData[x][2] == 'f' else 1 
+            returnData[x][1] = unpack('<' + returnData[x][2], data[index:index+size])[0]
+            index += size
 
 
-        # Need to store data now it is not working
+      
         wheel = joystick.get_axis(0) + 1
         brakepedal = joystick.get_axis(1) + 1
         throttlepedal = joystick.get_axis(5) + 1
@@ -70,8 +68,3 @@ while True:
             
         if joystick.get_button(10) == 1:
             running = False
-
-
-
-    # Returns: Current car speed in meters per second
-    # A full list of tags can be found in the 'ArrayStructure' file
